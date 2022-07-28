@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Microsoft.Graph;
+using Microsoft.Graph.CallRecords;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Web;
 using System;
@@ -80,7 +81,7 @@ namespace daemon_console
             await CallMSGraphUsingGraphSDK(app, scopes);
 
             // Call MS Graph REST API directly
-            await CallMSGraph(config, app, scopes);
+            // await CallMSGraph(config, app, scopes);
         }
 
         /// <summary>
@@ -133,13 +134,21 @@ namespace daemon_console
             GraphServiceClient graphServiceClient = GetAuthenticatedGraphClient(app, scopes);
 
 
-            List<User> allUsers = new List<User>();
+            // List<User> allUsers = new List<User>();
 
             try
             {
 
-                IGraphServiceUsersCollectionPage users = await graphServiceClient.Users.Request().GetAsync();
-                Console.WriteLine($"Found {users.Count()} users in the tenant"); 
+                // IGraphServiceUsersCollectionPage users = await graphServiceClient.Users.Request().GetAsync();
+                // Console.WriteLine($"Found {users.Count()} users in the tenant"); 
+
+                CallRecord callrecord = await graphServiceClient.Communications.CallRecords["68dfa85b-3d18-44de-937e-a639d313c6ff"]
+                    .Request()
+                    .GetAsync();
+
+                Console.WriteLine("Start time: " + callrecord.StartDateTime);
+                Console.WriteLine("End time: " + callrecord.EndDateTime);
+                
             }
             catch (ServiceException e)
             {
