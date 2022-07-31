@@ -8,16 +8,15 @@
     <PackageReference Include="Microsoft.Graph" Version="4.35.0" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.45.0" />
     <PackageReference Include="Microsoft.Identity.Web" Version="1.25.1" />
+    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.Storage.Blobs" Version="5.0.1" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Microsoft.Graph" />
     <None Remove="Microsoft.Identity.Client" />
     <None Remove="Microsoft.Identity.Web" />
+    <None Remove="Microsoft.Azure.WebJobs.Extensions.Storage.Blobs" />
   </ItemGroup>
   <ItemGroup>
-    <None Update="loginsettings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="host.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
