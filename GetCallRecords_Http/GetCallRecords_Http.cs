@@ -35,7 +35,14 @@ namespace GetCallRecords_Http
             log.LogInformation("GetCallRecords_Http is triggered.");
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            //log.LogInformation(requestBody);
+            if (requestBody == null)
+            {
+                log.LogInformation("The requestBody is NULL");
+            } 
+            else
+            {
+                log.LogInformation("The requestBody is: " + requestBody);
+            }
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
             //////////////////// This is a validation process, so rutrun and stop program here! ////////////////////
