@@ -3,15 +3,19 @@
   "Values": {
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet",
-    "AzureWebJobsSecretStorageType": "files",
 
+    "AzureWebJobsSecretStorageType": "files",
     "BlobConnectionString": "DefaultEndpointsProtocol=https;AccountName=callrecordsaved;AccountKey=41EWWoju5Iqj3F7JBLgvq4rLS29FoY8YxrRAqT0H7biLkUAzquDzKvOsSpMU7k6Bc+4xJyPxyoIS+AStZOjSsw==;EndpointSuffix=core.windows.net",
-    "BlobContainerName": "callrecord-save",
+    "BlobContainerName_CallRecords": "callrecord-save",
+    "BlobContainerName_UserEvents": "userevents",
 
     "Instance": "https://login.microsoftonline.com/{0}",
     "ApiUrl": "https://graph.microsoft.com/",
-    "Tenant": "{YourTenantID}",
-    "ClientId": "{YourClientID}",
-    "ClientSecret": "{YOurClientSecret}"
-  }
+    "Tenant": "37e86d06-0eef-46b9-90a7-117121b71fd3",
+    "ClientId": "8af4b707-a9dd-4107-ac93-e0f6280cea72",
+    "ClientSecret": "8IV8Q~AGX1654mEETqJCFSUM7Mb7vUTQ3plKJbLQ",
+
+    "subscriptionId": "ddef3572-767f-44e3-83fc-5f0b0a98a1c1"
+  },
+
 }

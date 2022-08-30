@@ -2,14 +2,145 @@
 // Licensed under the MIT License.
 
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Microsoft.Graph;
+using Microsoft.Identity.Client;
 using Microsoft.Identity.Web;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Threading.Tasks;
+using System.Net.Http.Headers;
+using Azure.Storage.Blobs;
+using System.Text;
+using Directory = System.IO.Directory;
 
 namespace daemon_console
 {
+    public class GlobalFunction
+    {
+
+        /// <summary>
+        /// An example of how to authenticate the Microsoft Graph SDK using the MSAL library
+        /// </summary>
+        /// <returns></returns>
+        public static GraphServiceClient GetAuthenticatedGraphClient(IConfidentialClientApplication app, string[] scopes)
+        {
+
+            GraphServiceClient graphServiceClient =
+                    new GraphServiceClient("https://graph.microsoft.com/V1.0/", new DelegateAuthenticationProvider(async (requestMessage) =>
+                    {
+                        // Retrieve an access token for Microsoft Graph (gets a fresh token if needed).
+                        AuthenticationResult result = await app.AcquireTokenForClient(scopes)
+                            .ExecuteAsync();
+
+                        // Add the access token in the Authorization header of the API request.
+                        requestMessage.Headers.Authorization =
+                            new AuthenticationHeaderValue("Bearer", result.AccessToken);
+                    }));
+
+            return graphServiceClient;
+        }
+
+        /// <summary>
+        /// Get logined App
+        /// </summary>
+        /// <param name="config"></param>
+        /// <returns></returns>
+        public static IConfidentialClientApplication GetAppAsync(AuthenticationConfig config)
+        {
+            //// You can run this sample using ClientSecret or Certificate. The code will differ only when instantiating the IConfidentialClientApplication
+            //bool isUsingClientSecret = IsAppUsingClientSecret(config);
+
+            // Even if this is a console application here, a daemon application is a confidential client application
+            IConfidentialClientApplication app;
+
+            // Even if this is a console application here, a daemon application is a confidential client application
+            app = ConfidentialClientApplicationBuilder.Create(config.ClientId)
+                .WithClientSecret(config.ClientSecret)
+                .WithAuthority(new Uri(config.Authority))
+                .Build();
+
+            app.AddInMemoryTokenCache();
+
+            return app;
+        }
+
+        /// <summary>
+        /// Save event to blob
+        /// </summary>
+        /// <param name="file_name"></param>
+        /// <param name="jsonString"></param>
+        /// <param name="connectionString"></param>
+        /// <param name="containerName"></param>
+        /// <param name="log"></param>
+        /// <returns></returns>
+        public static async Task SaveToBlob(string file_name, string jsonString, string connectionString, string containerName, ILogger log)
+        {
+            //string connectionString = Environment.GetEnvironmentVariable("BlobConnectionString");
+            //string containerName = Environment.GetEnvironmentVariable("BlobContainerName");
+
+            BlobContainerClient container = new BlobContainerClient(connectionString, containerName);
+
+            var blob = container.GetBlobClient(file_name);
+            using (MemoryStream mem = new MemoryStream())
+            {
+                // Write to stream
+                Byte[] info = new UTF8Encoding(true).GetBytes(jsonString);
+                mem.Write(info, 0, info.Length);
+
+                // Go back to beginning of stream
+                mem.Position = 0;
+
+                // TODO: Handle the BlobAlreadyExists code
+                await blob.UploadAsync(mem, overwrite: true);
+            }
+
+        }
+
+        ///// <summary>
+        ///// Calls MS Graph REST API using an authenticated Http client
+        ///// </summary>
+        ///// <param name="config"></param>
+        ///// <param name="app"></param>
+        ///// <param name="scopes"></param>
+        ///// <returns></returns>
+        //private static async Task CallMSGraph(AuthenticationConfig config, IConfidentialClientApplication app, string[] scopes, string meetingID)
+        //{
+        //    AuthenticationResult result = null;
+        //    try
+        //    {
+        //        result = await app.AcquireTokenForClient(scopes)
+        //            .ExecuteAsync();
+
+        //        Console.ForegroundColor = ConsoleColor.Green;
+        //        Console.WriteLine("Token acquired");
+        //        Console.ResetColor();
+        //    }
+        //    catch (MsalServiceException ex) when (ex.Message.Contains("AADSTS70011"))
+        //    {
+        //        // Invalid scope. The scope has to be of the form "https://resourceurl/.default"
+        //        // Mitigation: change the scope to be as expected
+        //        Console.ForegroundColor = ConsoleColor.Red;
+        //        Console.WriteLine("Scope provided is not supported");
+        //        Console.ResetColor();
+        //    }
+
+        //    // The following example uses a Raw Http call 
+        //    if (result != null)
+        //    {
+        //        var httpClient = new HttpClient();
+        //        var apiCaller = new ProtectedApiCallHelper(httpClient);
+        //        //await apiCaller.CallWebApiAndProcessResultASync($"{config.ApiUrl}v1.0/users", result.AccessToken, Display);
+        //        Console.WriteLine("Running: await apiCaller.CallWebApiAndProcessResultASync");
+        //        await apiCaller.CallWebApiAndProcessResultASync(
+        //            $"{config.ApiUrl}v1.0/communications/callRecords/{meetingID}",
+        //            result.AccessToken, Display);
+        //            //$"{config.ApiUrl}v1.0/communications/callRecords/{meetingID}?$expand=sessions($expand=segments)",
+        //    }
+        //}
+    }
+
     /// <summary>
     /// Description of the configuration of an AzureAD public client application (desktop/mobile application). This should
     /// match the application registration done in the Azure portal
