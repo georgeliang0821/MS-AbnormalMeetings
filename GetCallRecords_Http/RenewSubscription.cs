@@ -152,8 +152,6 @@ namespace CallRecordsSubscription
                             log.LogInformation("There is an error when processing events! (May be MailboxNotEnabledForRESTAPI)");
                             log.LogInformation("\tUserId: " + user.Id);
                         }
-
-                        break;
                     }
                     // TODO: catch the exact problem
 
