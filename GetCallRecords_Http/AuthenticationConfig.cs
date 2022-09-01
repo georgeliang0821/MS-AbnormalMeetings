@@ -19,6 +19,18 @@ namespace daemon_console
 {
     public class GlobalFunction
     {
+        public static async Task SaveObjectToBlob(string filename, object jsonObject, string connectionString_name, string containerName_name, ILogger log)
+        {
+            string connectionString = Environment.GetEnvironmentVariable("BlobConnectionString");
+            string containerName = Environment.GetEnvironmentVariable("BlobContainerName_CallRecords");
+
+            string jsonString = System.Text.Json.JsonSerializer.Serialize(jsonObject);
+            log.LogInformation("jsonString: " + jsonString);
+
+            log.LogInformation("Writing file...");
+            await daemon_console.GlobalFunction.SaveToBlob(filename, jsonString, connectionString, containerName, log);
+            log.LogInformation("Success writing file: " + filename);
+        }
 
         /// <summary>
         /// An example of how to authenticate the Microsoft Graph SDK using the MSAL library
@@ -95,6 +107,45 @@ namespace daemon_console
                 // TODO: Handle the BlobAlreadyExists code
                 await blob.UploadAsync(mem, overwrite: true);
             }
+
+        }
+        public static async Task ReadFromBlob(string file_name, string connectionString, string containerName, ILogger log)
+        {
+            //string connectionString = Environment.GetEnvironmentVariable("BlobConnectionString");
+            //string containerName = Environment.GetEnvironmentVariable("BlobContainerName");
+
+
+            BlobContainerClient containerClient = new BlobContainerClient(connectionString, containerName);
+            BlobClient blobClient = containerClient.GetBlobClient(file_name);
+
+            if (await blobClient.ExistsAsync())
+            {
+                var response = await blobClient.DownloadAsync();
+                using (var streamReader = new StreamReader(response.Value.Content))
+                {
+                    while (!streamReader.EndOfStream)
+                    {
+                        var line = await streamReader.ReadLineAsync();
+                        Console.WriteLine(line);
+                    }
+                }
+            }
+
+            BlobContainerClient container = new BlobContainerClient(connectionString, containerName);
+
+            //var blob = container.GetBlobClient(file_name);
+            //using (MemoryStream mem = new MemoryStream())
+            //{
+            //    // Write to stream
+            //    Byte[] info = new UTF8Encoding(true).GetBytes(jsonString);
+            //    mem.Write(info, 0, info.Length);
+
+            //    // Go back to beginning of stream
+            //    mem.Position = 0;
+
+            //    // TODO: Handle the BlobAlreadyExists code
+            //    await blob.UploadAsync(mem, overwrite: true);
+            //}
 
         }
 

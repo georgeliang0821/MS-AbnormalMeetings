@@ -12,10 +12,7 @@ using Microsoft.Graph;
 using Microsoft.Graph.CallRecords;
 using Microsoft.Identity.Client;
 using daemon_console;
-using System.Collections.Generic;
-using Azure.Storage.Blobs;
-using System.Text;
-using System.Web;
+using global_class;
 
 namespace GetCallRecords_Http
 {
@@ -30,7 +27,7 @@ namespace GetCallRecords_Http
             log.LogInformation("GetCallRecords_Http is triggered.");
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            if (requestBody == null)
+            if (requestBody == "")
             {
                 log.LogInformation("The requestBody is NULL");
             } 
@@ -132,31 +129,7 @@ namespace GetCallRecords_Http
             return null;
         }
 
-        /// <summary>
-        /// Return json from subscription
-        /// </summary>
-        public class SubscriptionData
-        {
-            public List<Value> value { get; set; }
-        }
 
-        public class Value
-        {
-            public string tenantId { get; set; }
-            public string subscriptionId { get; set; }
-            public string clientState { get; set; }
-            public string changeType { get; set; }
-            public string resource { get; set; }
-            public DateTime subscriptionExpirationDateTime { get; set; }
-            public ResourceData resourceData { get; set; }
-        }
-
-        public class ResourceData
-        {
-            public string oDataType { get; set; }
-            public string oDataId { get; set; }
-            public string id { get; set; }
-        }
 
     }
 }

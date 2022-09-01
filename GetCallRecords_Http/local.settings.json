@@ -6,8 +6,12 @@
 
     "AzureWebJobsSecretStorageType": "files",
     "BlobConnectionString": "DefaultEndpointsProtocol=https;AccountName=callrecordsaved;AccountKey=41EWWoju5Iqj3F7JBLgvq4rLS29FoY8YxrRAqT0H7biLkUAzquDzKvOsSpMU7k6Bc+4xJyPxyoIS+AStZOjSsw==;EndpointSuffix=core.windows.net",
+
     "BlobContainerName_CallRecords": "callrecord-save",
     "BlobContainerName_UserEvents": "userevents",
+    "BlobContainerName_SubscriptionList": "subscription-list",
+
+    "BlobFileName": "subscriptionList.json",
 
     "Instance": "https://login.microsoftonline.com/{0}",
     "ApiUrl": "https://graph.microsoft.com/",
@@ -15,7 +19,10 @@
     "ClientId": "8af4b707-a9dd-4107-ac93-e0f6280cea72",
     "ClientSecret": "8IV8Q~AGX1654mEETqJCFSUM7Mb7vUTQ3plKJbLQ",
 
-    "subscriptionId": "ddef3572-767f-44e3-83fc-5f0b0a98a1c1"
+    "subscriptionId": "ddef3572-767f-44e3-83fc-5f0b0a98a1c1",
+
+    "Webhook_CallRecords": "https://abnormalmeetings.azurewebsites.net/api/GetCallRecords_Http?code=tfaE2OsrCOhU-ggzSL23CsJNFUD-14RUJ_1NXZQQrozBAzFuiThduQ==",
+    "Webhook_UserEvents": "https://abnormalmeetings.azurewebsites.net/api/GetCallRecords_Http?code=tfaE2OsrCOhU-ggzSL23CsJNFUD-14RUJ_1NXZQQrozBAzFuiThduQ=="
   },
 
 }

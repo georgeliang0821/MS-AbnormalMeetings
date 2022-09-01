@@ -1,32 +1,75 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
+using System.Web;
+using Azure.Core;
 using Azure.Storage.Blobs;
 using daemon_console;
+using global_class;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Logging;
 using Microsoft.Graph;
+using Microsoft.Graph.CallRecords;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Web;
+using Microsoft.VisualBasic;
+using Newtonsoft.Json;
 
 namespace CallRecord_UserEvents
 {
     public class CallRecord_UserEvents
     {
+        private static ILogger mylog = null;
+
         [FunctionName("CallRecord_UserEvents")]
-        //public void Run([TimerTrigger("0 */1 * * * *")]TimerInfo myTimer, ILogger log)
-        public void Run([TimerTrigger("0 0 6 * * *")]TimerInfo myTimer, ILogger log)
+        public static async Task<IActionResult> Run(
+            [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
+            ILogger log)
         {
-            log.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
+            mylog = log;
+
+            log.LogInformation("GetCallRecords_Http is triggered.");
+
+            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            if (requestBody == "")
+            {
+                log.LogInformation("The requestBody is NULL");
+            }
+            else
+            {
+                log.LogInformation("The requestBody is: " + requestBody);
+            }
+
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //////////////////// This is a validation process, so rutrun and stop program here! ////////////////////
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////
+            string query_validationToken = req.Query["validationToken"];
+            if (query_validationToken != null)
+            {
+                log.LogInformation("The validationToken is: " + query_validationToken);
+                return new OkObjectResult(query_validationToken);
+            }
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+            SubscriptionData subscriptionData = JsonConvert.DeserializeObject<SubscriptionData>(requestBody);
+            string resource = subscriptionData.value[0].resource;
 
             IConfidentialClientApplication app;
             try
             {
+                log.LogInformation("Login to application...");
+
                 AuthenticationConfig config = new AuthenticationConfig();
 
                 config.Instance = Environment.GetEnvironmentVariable("Instance");
@@ -35,85 +78,90 @@ namespace CallRecord_UserEvents
                 config.ClientId = Environment.GetEnvironmentVariable("ClientId");
                 config.ClientSecret = Environment.GetEnvironmentVariable("ClientSecret");
 
-                // Build the app
-                log.LogInformation("Login to application...");
+                string webApiUrl = $"{config.ApiUrl}v1.0/{resource}";
+
                 app = daemon_console.GlobalFunction.GetAppAsync(config);
                 log.LogInformation("Success login.");
-
-                log.LogInformation("Getting call records...");
 
                 string[] scopes = new string[] { $"{config.ApiUrl}.default" }; // Generates a scope -> "https://graph.microsoft.com/.default"
 
                 // Call MS graph using the Graph SDK
-                log.LogInformation("Running Function: CallMSGraphUsingGraphSDK");
-                _ = SaveUserEvents(config, app, scopes, log);
+                log.LogInformation("Running Function: SaveUserEvents");
+                string userEvent_Json = await SaveUserEvents(app, scopes, webApiUrl, log);
+
+                string filename = resource + ".json";
+                // await daemon_console.GlobalFunction.SaveObjectToBlob(filename, userEvent, "BlobConnectionString", "BlobContainerName_CallRecords", log);
+                string connectionString = Environment.GetEnvironmentVariable("BlobConnectionString");
+                string containerName = Environment.GetEnvironmentVariable("BlobContainerName_UserEvents"); ;
+                await daemon_console.GlobalFunction.SaveToBlob(filename, userEvent_Json, connectionString, containerName, log);
+
+                return new OkObjectResult(JsonConvert.SerializeObject("Successfully run!"));
+
             }
             catch (Exception ex)
             {
                 log.LogError(ex.Message);
             }
+
+            return new BadRequestObjectResult("Something wrong happened!");
         }
 
-        private async Task SaveUserEvents(AuthenticationConfig config, IConfidentialClientApplication app, string[] scopes, ILogger log)
+
+
+
+        /// <summary>
+        /// The following example shows how to initialize the MS Graph SDK
+        /// </summary>
+        /// <param name="app"></param>
+        /// <param name="scopes"></param>
+        /// <returns></returns>
+        private static async Task<string> SaveUserEvents(IConfidentialClientApplication app, string[] scopes, string webApiUrl, ILogger log)
         {
-            string connectionString = Environment.GetEnvironmentVariable("BlobConnectionString");
-            string containerName = Environment.GetEnvironmentVariable("BlobContainerName_UserEvents");
-            
-            Double timeRange = 1440 * 1;
-            Double timeShift = -1440 * 1;
-            String targetStartDatetime = "'" + DateTime.UtcNow.AddMinutes(timeShift).ToString("s") + "'";
-            String targetEndDatetime = "'" + DateTime.UtcNow.AddMinutes(timeShift + timeRange).ToString("s") + "'";
-
-            string queryString = "start/dateTime ge " + targetStartDatetime + " and " + "end/dateTime le " + targetEndDatetime;
-            log.LogInformation("queryString: " + queryString);
-
+            AuthenticationResult result = null;
             try
             {
-                GraphServiceClient graphServiceClient = daemon_console.GlobalFunction.GetAuthenticatedGraphClient(app, scopes);
-                
-                var users = await graphServiceClient.Users.Request().GetAsync();
-                log.LogInformation("Found # of user: " + users.Count);
-
-                foreach (var user in users)
-                {
-
-                    log.LogInformation("Current user ID: " + user.Id);
-
-                    // TODO: catch the exact problem
-                    try
-                    {
-                        var events = await graphServiceClient.Users[user.Id].Events
-                            .Request()
-                            .Filter(queryString)
-                            .GetAsync();
-
-                        foreach (var event_ in events)
-                        {
-                            log.LogInformation("\tsubject: " + event_.Subject);
-                            string filename = event_.Id + ".json";
-                            string jsonString = System.Text.Json.JsonSerializer.Serialize(event_);
-
-                            await daemon_console.GlobalFunction.SaveToBlob(filename, jsonString, connectionString, containerName, log);
-                            log.LogInformation("\tsubject: " + event_.Subject + " Save to: " + filename);
-                            //log.LogInformation("\tStart time: " + event_.Start.DateTime);
-                            //log.LogInformation("\tEnd time: " + event_.End.DateTime);
-                            //foreach (var attendee in event_.Attendees)
-                            //{
-                            //    log.LogInformation("\t\temailAddress: " + attendee.EmailAddress.Address);
-                            //}
-                        }
-                    }
-                    catch
-                    {
-                        log.LogInformation("\tthere is an error when processing events! (May be MailboxNotEnabledForRESTAPI)");
-                    }
-                    
-                }
+                result = await app.AcquireTokenForClient(scopes)
+                    .ExecuteAsync();
+                log.LogInformation("Token acquired");
             }
-            catch (ServiceException e)
+            catch (MsalServiceException ex) when (ex.Message.Contains("AADSTS70011"))
             {
-                log.LogError(e.Error.Message);
+                log.LogInformation("Scope provided is not supported");
             }
+
+            if (result != null)
+            {
+                string accessToken = result.AccessToken;
+                var httpClient = new HttpClient();
+
+                HttpRequestHeaders defaultRequestHeaders1 = httpClient.DefaultRequestHeaders;
+                var defaultRequestHeaders = defaultRequestHeaders1;
+                if (defaultRequestHeaders.Accept == null || !defaultRequestHeaders.Accept.Any(m => m.MediaType == "application/json"))
+                {
+                    httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                }
+                defaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+                HttpResponseMessage response = await httpClient.GetAsync(webApiUrl);
+                if (response.IsSuccessStatusCode)
+                {
+                    string json = await response.Content.ReadAsStringAsync();
+                    return json;
+                }
+                else
+                {
+                    log.LogInformation($"Failed to call the web API: {response.StatusCode}");
+                    string content = await response.Content.ReadAsStringAsync();
+
+                    // Note that if you got reponse.Code == 403 and reponse.content.code == "Authorization_RequestDenied"
+                    // this is because the tenant admin as not granted consent for the application to call the Web API
+                    log.LogInformation($"Content: {content}");
+                }
+
+                return null;
+            }
+
+            return null;
         }
     }
 }
