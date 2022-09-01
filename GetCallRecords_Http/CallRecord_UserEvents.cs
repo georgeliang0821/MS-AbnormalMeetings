@@ -64,6 +64,7 @@ namespace CallRecord_UserEvents
 
             SubscriptionData subscriptionData = JsonConvert.DeserializeObject<SubscriptionData>(requestBody);
             string resource = subscriptionData.value[0].resource;
+            string filename = subscriptionData.value[0].resourceData.id + ".json";
 
             IConfidentialClientApplication app;
             try
@@ -89,7 +90,6 @@ namespace CallRecord_UserEvents
                 log.LogInformation("Running Function: SaveUserEvents");
                 string userEvent_Json = await SaveUserEvents(app, scopes, webApiUrl, log);
 
-                string filename = resource + ".json";
                 // await daemon_console.GlobalFunction.SaveObjectToBlob(filename, userEvent, "BlobConnectionString", "BlobContainerName_CallRecords", log);
                 string connectionString = Environment.GetEnvironmentVariable("BlobConnectionString");
                 string containerName = Environment.GetEnvironmentVariable("BlobContainerName_UserEvents"); ;
