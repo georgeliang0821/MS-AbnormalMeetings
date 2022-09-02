@@ -37,7 +37,7 @@ namespace CallRecord_UserEvents
         {
             mylog = log;
 
-            log.LogInformation("GetCallRecords_Http is triggered.");
+            log.LogInformation("CallRecord_UserEvents is triggered.");
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             if (requestBody == "")

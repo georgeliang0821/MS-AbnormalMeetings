@@ -58,7 +58,7 @@ namespace CallRecordsSubscription
             // SubscriptionList newSubscriptionList = new SubscriptionList();
             SubscriptionList subscriptionList;
 
-            string webhook_UserEvent = Environment.GetEnvironmentVariable("Webhook_UserEvents");
+            string webhook_UserEvents = Environment.GetEnvironmentVariable("Webhook_UserEvents");
             string connectionString = Environment.GetEnvironmentVariable("BlobConnectionString");
             string containerName = Environment.GetEnvironmentVariable("BlobContainerName_SubscriptionList");
             string filename = Environment.GetEnvironmentVariable("BlobFileName");
@@ -125,7 +125,7 @@ namespace CallRecordsSubscription
                         var subscription = new Subscription
                         {
                             ChangeType = "created,updated",
-                            NotificationUrl = webhook_UserEvent,
+                            NotificationUrl = webhook_UserEvents,
                             Resource = "/users/" + user.Id + "/events",
                             ExpirationDateTime = expirationDateTime,
                             ClientState = "secretClientValue",
