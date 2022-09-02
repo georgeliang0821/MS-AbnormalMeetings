@@ -23,7 +23,5 @@
 
     "Webhook_CallRecords": "https://abnormalmeetings.azurewebsites.net/api/GetCallRecords_Http?code=Bk93Z90dgvoWvZ1ZUxqiJH62QENjfOYgO1yTr7bwkEomAzFunj8YHg==",
     "Webhook_UserEvents": "https://abnormalmeetings.azurewebsites.net/api/CallRecord_UserEvents?code=dFUajqD9Upi_Poef6TuJyns4iHzSkR0Z-kUULLcbicxoAzFudX5C9A=="
-    //"Webhook_UserEvents": "http://localhost:7071/api/CallRecord_UserEvents"
-    // "https": //abnormalmeetings.azurewebsites.net/api/CallRecord_UserEvents?code=dFUajqD9Upi_Poef6TuJyns4iHzSkR0Z-kUULLcbicxoAzFudX5C9A==
   }
 }
