@@ -21,7 +21,9 @@
 
     "subscriptionId": "ddef3572-767f-44e3-83fc-5f0b0a98a1c1",
 
-    "Webhook_CallRecords": "https://abnormalmeetings.azurewebsites.net/api/GetCallRecords_Http?code=tfaE2OsrCOhU-ggzSL23CsJNFUD-14RUJ_1NXZQQrozBAzFuiThduQ==",
-    "Webhook_UserEvents": "https://abnormalmeetings.azurewebsites.net/api/CallRecord_UserEvents?code=qHX1wnAY8AyTjvbKiwQ9sxobx25DtXe2RxPb6NQMyK6AAzFuvT-s-w=="
+    "Webhook_CallRecords": "https://abnormalmeetings.azurewebsites.net/api/GetCallRecords_Http?code=Bk93Z90dgvoWvZ1ZUxqiJH62QENjfOYgO1yTr7bwkEomAzFunj8YHg==",
+    "Webhook_UserEvents": "https://abnormalmeetings.azurewebsites.net/api/CallRecord_UserEvents?code=dFUajqD9Upi_Poef6TuJyns4iHzSkR0Z-kUULLcbicxoAzFudX5C9A=="
+    //"Webhook_UserEvents": "http://localhost:7071/api/CallRecord_UserEvents"
+    // "https": //abnormalmeetings.azurewebsites.net/api/CallRecord_UserEvents?code=dFUajqD9Upi_Poef6TuJyns4iHzSkR0Z-kUULLcbicxoAzFudX5C9A==
   }
 }

@@ -21,9 +21,9 @@ namespace CallRecordsSubscription
     {
         [FunctionName("RenewSubscription")]
         //public static async Task Run([TimerTrigger("*/15 * * * * *")]TimerInfo myTimer, ILogger log)
-        public static async Task Run([TimerTrigger("0 0 6 * * *")] TimerInfo myTimer, ILogger log)
+        public static async Task Run([TimerTrigger("0 */5 * * * *")] TimerInfo myTimer, ILogger log)
         {
-            log.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
+            log.LogInformation($"RenewSubscription executed at: {DateTime.Now}");
 
             IConfidentialClientApplication app;
             try
@@ -44,7 +44,7 @@ namespace CallRecordsSubscription
                 string[] scopes = new string[] { $"{config.ApiUrl}.default" }; // Generates a scope -> "https://graph.microsoft.com/.default"
 
                 // Call MS graph using the Graph SDK
-                log.LogInformation("Running Function: GetCallRecordsSDK");
+                log.LogInformation("Running Function: CallMSGraphUsingGraphSDKAsync");
                 await CallMSGraphUsingGraphSDKAsync(config, app, scopes, log);
             }
             catch (Exception ex)
@@ -57,7 +57,8 @@ namespace CallRecordsSubscription
         {
             // SubscriptionList newSubscriptionList = new SubscriptionList();
             SubscriptionList subscriptionList;
-
+            
+            string webhook_CallRecords = Environment.GetEnvironmentVariable("Webhook_CallRecords");
             string webhook_UserEvents = Environment.GetEnvironmentVariable("Webhook_UserEvents");
             string connectionString = Environment.GetEnvironmentVariable("BlobConnectionString");
             string containerName = Environment.GetEnvironmentVariable("BlobContainerName_SubscriptionList");
@@ -76,10 +77,17 @@ namespace CallRecordsSubscription
                 string responseString = await new StreamReader(responseStream).ReadToEndAsync();
 
                 subscriptionList = JsonConvert.DeserializeObject<SubscriptionList>(responseString);
-                foreach (var subscriptionInfo in subscriptionList.value)
+                if (subscriptionList.value != null)
                 {
-                    subscriptionDict.Add(subscriptionInfo.UserId, subscriptionInfo.SubscriptionId);
-                    // log.LogInformation(subscriptionInfo.UserId + " : " + subscriptionDict[subscriptionInfo.UserId]);
+                    foreach (var subscriptionInfo in subscriptionList.value)
+                    {
+                        subscriptionDict.Add(subscriptionInfo.UserId, subscriptionInfo.SubscriptionId);
+                        // log.LogInformation(subscriptionInfo.UserId + " : " + subscriptionDict[subscriptionInfo.UserId]);
+                    }
+                }
+                else
+                {
+                    subscriptionList.value = new List<SubscriptionInfo>();
                 }
             }
             else
@@ -88,18 +96,59 @@ namespace CallRecordsSubscription
                 return;
             }
 
-            // Start to create or renew the subscription
+
+            ////////////////////////////////////////////////////////
+            ////// Start to create or renew the subscription////////
+            ////////////////////////////////////////////////////////
             IGraphServiceUsersCollectionPage users = null;
             try
             { 
                 GraphServiceClient graphServiceClient = daemon_console.GlobalFunction.GetAuthenticatedGraphClient(app, scopes);
-                users = await graphServiceClient.Users.Request().GetAsync();
-
-                log.LogInformation("Found # of user: " + users.Count);
 
                 //Double timeShift = 1440 * 3 - 10;
                 Double timeShift = 1440 * 2;
                 DateTime expirationDateTime = DateTime.UtcNow.AddMinutes(timeShift);
+
+                ////////////////////////////////////////////////////////
+                /////// Renew or Create CallRecord subscription ////////
+                ////////////////////////////////////////////////////////
+                string callRecordId = "callRecordId";
+                log.LogInformation("Renew or Create CallRecord subscription");
+                // Renew
+                if (subscriptionDict.ContainsKey(callRecordId))
+                {
+                    await GraphApi_RenewSubscription(graphServiceClient, subscriptionDict[callRecordId], expirationDateTime, log);
+                }
+                // Create
+                else
+                {
+                    var subscription = new Subscription
+                    {
+                        ChangeType = "created,updated",
+                        NotificationUrl = webhook_CallRecords,
+                        Resource = "/communications/callRecords",
+                        ExpirationDateTime = expirationDateTime,
+                        ClientState = "secretClientValue",
+                        LatestSupportedTlsVersion = "v1_2"
+                    };
+
+                    Subscription responseSubscription = await GraphApi_CreateSubscription(graphServiceClient, subscription, log);
+
+                    if (responseSubscription != null)
+                    {
+                        SubscriptionInfo subscriptionInfo = new SubscriptionInfo(callRecordId, responseSubscription.Id);
+                        subscriptionList.value.Add(subscriptionInfo);
+                    }
+                }
+
+                ////////////////////////////////////////////////////////
+                /////// Renew or Create userEvents subscription ////////
+                ////////////////////////////////////////////////////////
+                // Renew or Create user subscription
+                log.LogInformation("Renew or Create UserEvents subscription");
+                users = await graphServiceClient.Users.Request().GetAsync();
+
+                log.LogInformation("Found # of user: " + users.Count);
 
                 foreach (var user in users)
                 {
@@ -108,16 +157,7 @@ namespace CallRecordsSubscription
                     // Renew
                     if (subscriptionDict.ContainsKey(user.Id))
                     {
-                        var subscription = new Subscription
-                        {
-                            ExpirationDateTime = expirationDateTime,
-                        };
-
-                        //string subscriptionId = Environment.GetEnvironmentVariable("subscriptionId");
-                        log.LogInformation(String.Format("\tTry to renew: subscriptionId- {0}; ExpirationDateTime- {1}: ", subscriptionDict[user.Id], expirationDateTime));
-
-                        await graphServiceClient.Subscriptions[subscriptionDict[user.Id]].Request().UpdateAsync(subscription);
-                        log.LogInformation("\tSuccessfully update the subscription!");
+                        await GraphApi_RenewSubscription(graphServiceClient, subscriptionDict[user.Id], expirationDateTime, log);
                     }
                     // Create
                     else
@@ -132,30 +172,16 @@ namespace CallRecordsSubscription
                             LatestSupportedTlsVersion = "v1_2"
                         };
 
-                        try
+                        Subscription responseSubscription = await GraphApi_CreateSubscription(graphServiceClient, subscription, log);
+                     
+                        if (responseSubscription != null)
                         {
-                            Subscription responseSubscription = await graphServiceClient.Subscriptions
-                            .Request()
-                            .AddAsync(subscription);
-
-                            SubscriptionInfo subscriptionInfo = new SubscriptionInfo();
-                            subscriptionInfo.UserId = user.Id;
-                            subscriptionInfo.SubscriptionId = responseSubscription.Id;
+                            SubscriptionInfo subscriptionInfo = new SubscriptionInfo(user.Id, responseSubscription.Id);
                             subscriptionList.value.Add(subscriptionInfo);
-
-                            log.LogInformation("\tSuccessfully create the subscription");
-                            log.LogInformation("\tUserId: " + user.Id);
-
-                        }
-                        catch
-                        {
-                            log.LogInformation("There is an error when processing events! (May be MailboxNotEnabledForRESTAPI)");
-                            log.LogInformation("\tUserId: " + user.Id);
-                        }
+                        }                        
                     }
-                    // TODO: catch the exact problem
-
                 }
+
                 string jsonString = System.Text.Json.JsonSerializer.Serialize(subscriptionList);
                 await daemon_console.GlobalFunction.SaveToBlob(filename, jsonString, connectionString, containerName, log);
                 log.LogInformation("Successfully renew the subscriptionList.");
@@ -166,6 +192,46 @@ namespace CallRecordsSubscription
                 log.LogError(e.Error.Message);
             }
 
+        }
+
+        private static async Task GraphApi_RenewSubscription(GraphServiceClient graphServiceClient, string subscriptionId, DateTimeOffset expirationDateTime, ILogger log)
+        {
+            log.LogInformation("\tRenewing a subscription");
+            var subscription = new Subscription
+            {
+                ExpirationDateTime = expirationDateTime,
+            };
+            
+            //string subscriptionId = Environment.GetEnvironmentVariable("subscriptionId");
+            log.LogInformation(String.Format("\t\tTry to renew: subscriptionId- {0}; ExpirationDateTime- {1}: ", subscriptionId, expirationDateTime));
+
+            await graphServiceClient.Subscriptions[subscriptionId].Request().UpdateAsync(subscription);
+            log.LogInformation("\t\tSuccessfully update the subscription!");
+        }
+
+        private static async Task<Subscription> GraphApi_CreateSubscription(GraphServiceClient graphServiceClient, Subscription subscription, ILogger log)
+        {
+            log.LogInformation("\tCreating a subscription");
+
+            try
+            {
+                Subscription responseSubscription = await graphServiceClient.Subscriptions
+                .Request()
+                .AddAsync(subscription);
+
+                log.LogInformation("\t\tSuccessfully create the subscription");
+                // log.LogInformation("\t\tUserId: " + user.Id);
+
+                return responseSubscription;
+            }
+            catch (Exception ex)
+            {
+                log.LogError(ex.Message);
+                log.LogInformation("\tThere is an error when processing events! (May be MailboxNotEnabledForRESTAPI)");
+                // log.LogInformation("\tUserId: " + user.Id);
+
+                return null;
+            }
         }
 
 

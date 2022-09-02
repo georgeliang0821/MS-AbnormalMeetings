@@ -39,6 +39,12 @@ namespace global_class
 
     public class SubscriptionInfo
     {
+        public SubscriptionInfo(string userId, string subscriptionId)
+        {
+            UserId = userId;
+            SubscriptionId = subscriptionId;
+        }
+
         public string UserId { get; set; }
         public string SubscriptionId { get; set; }
     }
