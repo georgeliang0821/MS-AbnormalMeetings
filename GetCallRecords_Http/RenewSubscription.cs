@@ -21,7 +21,7 @@ namespace CallRecordsSubscription
     {
         [FunctionName("RenewSubscription")]
         //public static async Task Run([TimerTrigger("*/15 * * * * *")]TimerInfo myTimer, ILogger log)
-        public static async Task Run([TimerTrigger("0 */5 * * * *")] TimerInfo myTimer, ILogger log)
+        public static async Task Run([TimerTrigger("0 */30 * * * *")] TimerInfo myTimer, ILogger log)
         {
             log.LogInformation($"RenewSubscription executed at: {DateTime.Now}");
 
@@ -105,6 +105,26 @@ namespace CallRecordsSubscription
             { 
                 GraphServiceClient graphServiceClient = daemon_console.GlobalFunction.GetAuthenticatedGraphClient(app, scopes);
 
+                // Print all subscription in the current tenant
+                var first_sub = await graphServiceClient.Subscriptions.Request().GetAsync();
+                while (first_sub != null)
+                {
+                    foreach (var sub in first_sub)
+                    {
+                        log.LogInformation("Subscription ID: " + sub.Id + "\tExpirationDateTime: " + sub.ExpirationDateTime + "\tResource: " + sub.Resource);
+                    }
+                    try
+                    {
+                         first_sub = await first_sub.NextPageRequest.GetAsync();
+
+                    }
+                    catch (NullReferenceException)
+                    {
+                        log.LogInformation("No next link exist");
+                        first_sub = null;
+                    }
+                }
+
                 //Double timeShift = 1440 * 3 - 10;
                 Double timeShift = 1440 * 2;
                 DateTime expirationDateTime = DateTime.UtcNow.AddMinutes(timeShift);
@@ -157,6 +177,7 @@ namespace CallRecordsSubscription
                     // Renew
                     if (subscriptionDict.ContainsKey(user.Id))
                     {
+
                         await GraphApi_RenewSubscription(graphServiceClient, subscriptionDict[user.Id], expirationDateTime, log);
                     }
                     // Create
@@ -196,17 +217,24 @@ namespace CallRecordsSubscription
 
         private static async Task GraphApi_RenewSubscription(GraphServiceClient graphServiceClient, string subscriptionId, DateTimeOffset expirationDateTime, ILogger log)
         {
-            log.LogInformation("\tRenewing a subscription");
-            var subscription = new Subscription
+            try
             {
-                ExpirationDateTime = expirationDateTime,
-            };
-            
-            //string subscriptionId = Environment.GetEnvironmentVariable("subscriptionId");
-            log.LogInformation(String.Format("\t\tTry to renew: subscriptionId- {0}; ExpirationDateTime- {1}: ", subscriptionId, expirationDateTime));
+                log.LogInformation("\tRenewing a subscription");
+                var subscription = new Subscription
+                {
+                    ExpirationDateTime = expirationDateTime,
+                };
 
-            await graphServiceClient.Subscriptions[subscriptionId].Request().UpdateAsync(subscription);
-            log.LogInformation("\t\tSuccessfully update the subscription!");
+                //string subscriptionId = Environment.GetEnvironmentVariable("subscriptionId");
+                log.LogInformation(String.Format("\t\tTry to renew: subscriptionId- {0}; ExpirationDateTime- {1}: ", subscriptionId, expirationDateTime));
+
+                await graphServiceClient.Subscriptions[subscriptionId].Request().UpdateAsync(subscription);
+                log.LogInformation("\t\tSuccessfully update the subscription!");
+            }
+            catch (Exception ex)
+            {
+                log.LogError(ex.Message);
+            }
         }
 
         private static async Task<Subscription> GraphApi_CreateSubscription(GraphServiceClient graphServiceClient, Subscription subscription, ILogger log)
