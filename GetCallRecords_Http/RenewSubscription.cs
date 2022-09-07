@@ -21,7 +21,7 @@ namespace CallRecordsSubscription
     {
         [FunctionName("RenewSubscription")]
         //public static async Task Run([TimerTrigger("*/15 * * * * *")]TimerInfo myTimer, ILogger log)
-        public static async Task Run([TimerTrigger("0 */30 * * * *")] TimerInfo myTimer, ILogger log)
+        public static async Task Run([TimerTrigger("0 25 16 * * *")] TimerInfo myTimer, ILogger log)
         {
             log.LogInformation($"RenewSubscription executed at: {DateTime.Now}");
 
@@ -144,7 +144,7 @@ namespace CallRecordsSubscription
                 {
                     var subscription = new Subscription
                     {
-                        ChangeType = "created,updated",
+                        ChangeType = "created",
                         NotificationUrl = webhook_CallRecords,
                         Resource = "/communications/callRecords",
                         ExpirationDateTime = expirationDateTime,
