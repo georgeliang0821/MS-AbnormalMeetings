@@ -6,13 +6,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Graph;
 using Microsoft.Identity.Client;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using System.Collections.Generic;
 using Azure.Storage.Blobs;
 using System.IO;
 using Newtonsoft.Json;
-using static GetCallRecords_Http.GetCallRecords_Http;
-using static CallRecordsSubscription.RenewSubscription;
 using global_class;
 
 namespace CallRecordsSubscription

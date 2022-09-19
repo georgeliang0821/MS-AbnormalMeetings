@@ -1,36 +1,49 @@
-﻿using System;
+using System;
 using System.IO;
+using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
+using System.Web;
+using Azure.Core;
+using Azure.Storage.Blobs;
+using daemon_console;
+using global_class;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.AspNetCore.Http;
+using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-
 using Microsoft.Graph;
 using Microsoft.Graph.CallRecords;
 using Microsoft.Identity.Client;
-using daemon_console;
-using global_class;
+using Microsoft.Identity.Web;
+using Microsoft.VisualBasic;
+using Newtonsoft.Json;
 
-namespace GetCallRecords_Http
+namespace AbnormalMeetings
 {
-
-    public class GetCallRecords_Http
+    public class GetUserEvents
     {
-        [FunctionName("GetCallRecords_Http")]
+        private static ILogger mylog = null;
+
+        [FunctionName("GetUserEvents")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
             ILogger log)
         {
-            log.LogInformation("GetCallRecords_Http is triggered.");
+            mylog = log;
+
+            log.LogInformation("CallRecord_UserEvents is triggered.");
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             if (requestBody == "")
             {
                 log.LogInformation("The requestBody is NULL");
-            } 
+            }
             else
             {
                 log.LogInformation("The requestBody is: " + requestBody);
@@ -50,7 +63,8 @@ namespace GetCallRecords_Http
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
             SubscriptionData subscriptionData = JsonConvert.DeserializeObject<SubscriptionData>(requestBody);
-            string meetingID = subscriptionData.value[0].resourceData.id;
+            string resource = subscriptionData.value[0].resource;
+            string filename = subscriptionData.value[0].resourceData.id + ".json";
 
             IConfidentialClientApplication app;
             try
@@ -65,30 +79,21 @@ namespace GetCallRecords_Http
                 config.ClientId = Environment.GetEnvironmentVariable("ClientId");
                 config.ClientSecret = Environment.GetEnvironmentVariable("ClientSecret");
 
+                string webApiUrl = $"{config.ApiUrl}v1.0/{resource}";
+
                 app = daemon_console.GlobalFunction.GetAppAsync(config);
                 log.LogInformation("Success login.");
 
-                log.LogInformation("Getting call records...");
                 string[] scopes = new string[] { $"{config.ApiUrl}.default" }; // Generates a scope -> "https://graph.microsoft.com/.default"
 
                 // Call MS graph using the Graph SDK
-                log.LogInformation("Running Function: GetCallRecordsSDK");
-                CallRecord callrecord = await GetCallRecordsSDK(app, scopes, meetingID, log);
+                log.LogInformation("Running Function: SaveUserEvents");
+                string userEvent_Json = await SaveUserEvents(app, scopes, webApiUrl, log);
 
-                string filename = callrecord.Id + ".json";
-                string jsonString = System.Text.Json.JsonSerializer.Serialize(callrecord);
-                log.LogInformation("jsonString: " + jsonString);
-
+                // await daemon_console.GlobalFunction.SaveObjectToBlob(filename, userEvent, "BlobConnectionString", "BlobContainerName_CallRecords", log);
                 string connectionString = Environment.GetEnvironmentVariable("BlobConnectionString");
-                string containerName = Environment.GetEnvironmentVariable("BlobContainerName_CallRecords");
-
-                log.LogInformation("Writing file...");
-                await daemon_console.GlobalFunction.SaveToBlob(filename, jsonString, connectionString,containerName, log);
-                log.LogInformation("Success writing file: " + meetingID + ".json");
-                
-                //// Call MS Graph REST API directly
-                //log.LogInformation("Running Function: CallMSGraph");
-                //await CallMSGraph(config, app, scopes, meetingID);
+                string containerName = Environment.GetEnvironmentVariable("BlobContainerName_UserEvents"); ;
+                await daemon_console.GlobalFunction.SaveToBlob(filename, userEvent_Json, connectionString, containerName, log);
 
                 return new OkObjectResult(JsonConvert.SerializeObject("Successfully run!"));
 
@@ -99,8 +104,10 @@ namespace GetCallRecords_Http
             }
 
             return new BadRequestObjectResult("Something wrong happened!");
-
         }
+
+
+
 
         /// <summary>
         /// The following example shows how to initialize the MS Graph SDK
@@ -108,29 +115,53 @@ namespace GetCallRecords_Http
         /// <param name="app"></param>
         /// <param name="scopes"></param>
         /// <returns></returns>
-        private static async Task<CallRecord> GetCallRecordsSDK(IConfidentialClientApplication app, string[] scopes, string meetingID, ILogger log)
+        private static async Task<string> SaveUserEvents(IConfidentialClientApplication app, string[] scopes, string webApiUrl, ILogger log)
         {
-            // Prepare an authenticated MS Graph SDK client
-            GraphServiceClient graphServiceClient = daemon_console.GlobalFunction.GetAuthenticatedGraphClient(app, scopes);
-
+            AuthenticationResult result = null;
             try
             {
-                CallRecord callrecord = await graphServiceClient.Communications.CallRecords[meetingID]
-                    .Request()
-                    .Expand("sessions($expand=segments)")
-                    .GetAsync();
-
-                return callrecord;
+                result = await app.AcquireTokenForClient(scopes)
+                    .ExecuteAsync();
+                log.LogInformation("Token acquired");
             }
-            catch (ServiceException e)
+            catch (MsalServiceException ex) when (ex.Message.Contains("AADSTS70011"))
             {
-                log.LogInformation("We could not retrieve the user's list: " + $"{e}");
+                log.LogInformation("Scope provided is not supported");
             }
+
+            if (result != null)
+            {
+                string accessToken = result.AccessToken;
+                var httpClient = new HttpClient();
+
+                HttpRequestHeaders defaultRequestHeaders1 = httpClient.DefaultRequestHeaders;
+                var defaultRequestHeaders = defaultRequestHeaders1;
+                if (defaultRequestHeaders.Accept == null || !defaultRequestHeaders.Accept.Any(m => m.MediaType == "application/json"))
+                {
+                    httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                }
+                defaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+                HttpResponseMessage response = await httpClient.GetAsync(webApiUrl);
+                if (response.IsSuccessStatusCode)
+                {
+                    string json = await response.Content.ReadAsStringAsync();
+                    return json;
+                }
+                else
+                {
+                    log.LogInformation($"Failed to call the web API: {response.StatusCode}");
+                    string content = await response.Content.ReadAsStringAsync();
+
+                    // Note that if you got reponse.Code == 403 and reponse.content.code == "Authorization_RequestDenied"
+                    // this is because the tenant admin as not granted consent for the application to call the Web API
+                    log.LogInformation($"Content: {content}");
+                }
+
+                return null;
+            }
+
             return null;
         }
-
-
-
     }
 }
-
