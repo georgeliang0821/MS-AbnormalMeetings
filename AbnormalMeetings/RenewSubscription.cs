@@ -122,7 +122,7 @@ namespace CallRecordsSubscription
                     }
                 }
 
-                //Double timeShift = 1440 * 3 - 10;
+                // Double timeShift = 1440 * 3 - 10;
                 Double timeShift = 1440 * 2;
                 DateTime expirationDateTime = DateTime.UtcNow.AddMinutes(timeShift);
 

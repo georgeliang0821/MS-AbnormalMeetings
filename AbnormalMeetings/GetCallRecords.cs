@@ -108,14 +108,14 @@ namespace AbnormalMeetings
         /// <param name="app"></param>
         /// <param name="scopes"></param>
         /// <returns></returns>
-        private static async Task<CallRecord> GetCallRecordsSDK(IConfidentialClientApplication app, string[] scopes, string meetingID, ILogger log)
+        private static async Task<CallRecord> GetCallRecordsSDK(IConfidentialClientApplication app, string[] scopes, string call_Id, ILogger log)
         {
             // Prepare an authenticated MS Graph SDK client
             GraphServiceClient graphServiceClient = daemon_console.GlobalFunction.GetAuthenticatedGraphClient(app, scopes);
 
             try
             {
-                CallRecord callrecord = await graphServiceClient.Communications.CallRecords[meetingID]
+                CallRecord callrecord = await graphServiceClient.Communications.CallRecords[call_Id]
                     .Request()
                     .Expand("sessions($expand=segments)")
                     .GetAsync();
