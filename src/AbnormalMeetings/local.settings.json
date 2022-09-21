@@ -19,8 +19,6 @@
     "ClientId": "8af4b707-a9dd-4107-ac93-e0f6280cea72",
     "ClientSecret": "8IV8Q~AGX1654mEETqJCFSUM7Mb7vUTQ3plKJbLQ",
 
-    "subscriptionId": "ddef3572-767f-44e3-83fc-5f0b0a98a1c1",
-
     "Webhook_CallRecords": "https://abnormalmeetings.azurewebsites.net/api/GetCallRecords_Http?code=Bk93Z90dgvoWvZ1ZUxqiJH62QENjfOYgO1yTr7bwkEomAzFunj8YHg==",
     "Webhook_UserEvents": "https://abnormalmeetings.azurewebsites.net/api/CallRecord_UserEvents?code=dFUajqD9Upi_Poef6TuJyns4iHzSkR0Z-kUULLcbicxoAzFudX5C9A=="
   }
