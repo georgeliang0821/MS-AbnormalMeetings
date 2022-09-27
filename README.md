@@ -18,6 +18,10 @@
 
 
 ## General Information
+### Code
+- The source code is in `src` folder.
+- Please use Visual Studio 2022 to open the source code
+### Requirement
 - TSMC want to know whether the insiders exist in Teams.
 - The abnormal meeting has two characteristics.
     1. 1 on 1 meeting, especially meeting with the one using personal email.
