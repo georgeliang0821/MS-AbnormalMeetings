@@ -34,11 +34,11 @@
 - Step 3: [Share/not share] your screen.
 - Step 4: After all tests, end the [call/meeting].
 - Step 5: **Wait 30 minutes.** 
-- Step 6: Go to `blob storage` to check your log!
+- Step 6: Go to your `blob storage` to check your log!
 #### UserEvents
 - Step 1: [Create/Modify] a event in [outlook/teams].
 - Step 2: **Wait 30 minutes.**
-- Step 3: Go to `blob storage` to check your log!
+- Step 3: Go to your `blob storage` to check your log!
 
 ## General Information
 ### Requirement and Scenario
@@ -77,7 +77,7 @@
 
 ### Create Bolb storage and containers
 - we create a blob storage named `callrecordsaved`
-- then create three container
+- then create three containers
     - callrecord-save
     - subscription-list
     - userevents
@@ -90,14 +90,14 @@
         ![](./img/azPortal_createApp.png)
 ### Deploy Source Code
 - Open project in `src` folder using Visual Studio 2022
-- Right click "Publish.." in Visual Studio 2022
+- Right click "Publish..." in Visual Studio 2022
     ![vsPublish_withSteps](./img/vsPublish_withSteps.png)
 - Choose to publish in "Azure" -> "Azure Function App (Windows) -> "AbnormalMeetings"
 - Click "finish" botton
     ![vsPublish_profile](./img/vsPublish_profile.png)
 - Then click "publish" button.
     ![](./img/vsPublish_profilePublish.png)
-- **Well done!** The function app will be deployed in Azure.
+- **Well done!** The function app has been deployed in Azure.
 ### Setting Environment Variables (Configuration)
 <!--
 - The specified location will be 
@@ -105,12 +105,12 @@
     2. Local develop (Visual Studio): local.setting.json
 -->
 - Belows are all needed configuration variables.
-- If you are deploying them on Azure, please go to "AbnormalMeetings" -> "Configuration" (in settings) and specified them.
+- If you are deploying them on Azure, please go to "Function App" -> "AbnormalMeetings" -> "Configuration" (in settings) and add/modify the configuration.
     ![azPortal_functionApp_configuration](./img/azPortal_functionApp_configuration.png)
-- If you are developing them locally, please go to "local.settings.json" and specified them.
+- If you are developing them locally, please go to "local.settings.json" and add/modify the configuration.
 
 #### Example Settings
-> You can copy this example if you needed.
+> You can copy and modify this example if you needed.
 ```json
 [
   {
@@ -233,7 +233,7 @@
 - "BlobContainerName_SubscriptionList": "subscription-list",
 - "BlobFileName": "subscriptionList.json", -->
 ##### Explanation
-- `BlobConnectionString` is the blob connectionstring, where you want to store your data
+- `BlobConnectionString` is the blob connectionstring, where you want to store your data. In this case, it is the connection string of `callrecordsaved`
 <!-- - `BlobContainerName_CallRecords`, `BlobContainerName_UserEvents` are the containers that are used to store results after calling graph api
 - `BlobContainerName_SubscriptionList` is the container that used to store the `BlobFileName`, which will be used in subscription. -->
 #### Azure Active Directory
@@ -252,13 +252,14 @@
 - "Webhook_UserEvents"
 ##### How to get `Webhook_CallRecords`, `Webhook_UserEvents`
 -After you deployed the function app to Azure, go to "AbnormalMeetings" -> "Funtions" -> "GetCallRecords" or "GetUserEvents" -> "get function url" to get the webhook urls
+  ![azPortal_getWebhook](./img/azPortal_getWebhook.png)
 
 <!-- ## Usage
 - After deployment and setting configuration, the function will start working!
 - You can go to "Monitor" in functions to monitor the logs of azure functions -->
 
 ## Features 
-
+> Here we describe what each .cs file does.
 ### RenewSubscription.cs
 - All subscription-related tasks will be done here.
 - The program will read the json file specifiled in `BlobFileName`, under the container specified in `BlobContainerName_SubscriptionList`. 
@@ -315,7 +316,6 @@
 - "Microsoft.Identity.Client" - Version="4.45.0"
 - "Microsoft.Identity.Web" - Version="1.25.1"
 - "Microsoft.Azure.WebJobs.Extensions.Storage.Blobs" - Version="5.0.1"
-
 
 ## Project Status
 Project is: _complete_
