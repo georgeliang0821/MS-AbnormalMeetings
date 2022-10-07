@@ -98,7 +98,7 @@ namespace AbnormalMeetings
                 log.LogError(ex.Message);
             }
 
-            return new BadRequestObjectResult("Something wrong happened!");
+            return new BadRequestObjectResult("Something wrong happened! Please check your log!");
 
         }
 
