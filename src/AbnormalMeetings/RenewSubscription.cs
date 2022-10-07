@@ -55,11 +55,20 @@ namespace CallRecordsSubscription
         {
             SubscriptionList subscriptionList;
             
-            string webhook_CallRecords = Environment.GetEnvironmentVariable("Webhook_CallRecords");
-            string webhook_UserEvents = Environment.GetEnvironmentVariable("Webhook_UserEvents");           
             string connectionString = Environment.GetEnvironmentVariable("BlobConnectionString");
-            string containerName = Environment.GetEnvironmentVariable("BlobContainerName_SubscriptionList");
-            string filename = Environment.GetEnvironmentVariable("BlobFileName");
+            string functionAppName = Environment.GetEnvironmentVariable("FunctionAppName");
+            string functionDefaultKey = Environment.GetEnvironmentVariable("FunctionDefaultKey");            
+            
+            // string containerName = Environment.GetEnvironmentVariable("BlobContainerName_SubscriptionList");
+            // string filename = Environment.GetEnvironmentVariable("BlobFileName");
+            string containerName = config.BlobContainerName_SubscriptionList;
+            string filename = config.BlobFileName;
+
+            // string webhook_CallRecords = Environment.GetEnvironmentVariable("Webhook_CallRecords");
+            // string webhook_UserEvents = Environment.GetEnvironmentVariable("Webhook_UserEvents");
+            string endpointTemplateString = "https://{0}.azurewebsites.net/api/{1}?code={2}&clientId=default";
+            string webhook_CallRecords = String.Format(endpointTemplateString, functionAppName, "GetCallRecords", functionDefaultKey);
+            string webhook_UserEvents = String.Format(endpointTemplateString, functionAppName, "GetUserEvents", functionDefaultKey);
 
             log.LogInformation("webhook_CallRecords: " + webhook_CallRecords);
             log.LogInformation("webhook_UserEvents: " + webhook_UserEvents);

@@ -4,11 +4,6 @@
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet",
     "AzureWebJobsSecretStorageType": "files",
-    "BlobContainerName_CallRecords": "callrecords-container",
-    "BlobContainerName_UserEvents": "userevents-container",
-    "BlobContainerName_SubscriptionList": "subscription-container",
-    "BlobFileName": "subscriptionList.json",
-
 
     "BlobConnectionString": "DefaultEndpointsProtocol=https;AccountName=abnormalmeetings20221008;AccountKey=VH7N9jFQsjxHiDT/IYRgnXwUuROURFWOKkZ4Zfa0RNTvaYk7W1g6OY82GqRRPa04lsDS/86GtNCM+AStzp+9xg==;EndpointSuffix=core.windows.net",
 
@@ -16,7 +11,7 @@
     "ClientId": "e5098aa7-a68c-4c86-9175-6b959ad3b120",
     "ClientSecret": "E_H8Q~c2KEsvK6BTsJfgGPS6Qf4L5fHAeIp3tcUf",
 
-    "Webhook_CallRecords": "https://abnormalmeetings20221008005227.azurewebsites.net/api/GetCallRecords?code=TWn5Otb2SSbBEKv73o5aNsADhDMVj8AMuIAlBahTTh5LAzFuRf_MwQ==",
-    "Webhook_UserEvents": "https://abnormalmeetings20221008005227.azurewebsites.net/api/GetUserEvents?code=MtCvuPYZlo9lRlghqEnEDIsLOe_gcE00hGAEQsvGHGKnAzFu6ur_Cw=="
+    "FunctionAppName": "abnormalmeetings20221008005227",
+    "FunctionDefaultKey": "fAy2y5XsHK1E3Q0pwsjMacB0kBWiLl_H-nkGlIAPrHZ5AzFuqQN2hQ=="
   }
 }
