@@ -4,6 +4,7 @@
 <!-- > Live demo [_here_](https://www.example.com). If you have the project hosted somewhere, include the link here. -->
 
 ## Table of Contents
+* [Architecture](#architecture)
 * [Steps to Demo](#steps-to-demo)
 * [General Info](#general-information)
 * [Setup](#setup)
@@ -17,9 +18,12 @@
 <!-- * [Usage](#usage) -->
 <!-- * [License](#license) -->
 
+## Architecture
+- ![](./img/architecture.png)
 
 ## Steps To Demo
 ### Prerequisite
+<!-- TODO: add the demo account application -->
 1. Having an ***admin account*** of an organization or having a ***client secret*** with [required API permissions](#required-api-permissions)
 2. [Create a blob storage with several containers](#create-bolb-storage-and-containers)
 ### Deploy
@@ -27,6 +31,7 @@
 - Step 2: Create a [Function App named "AbnormalMeetings"](#create-function-app)
 - Step 3: [Deploy source code to Azure.](#deploy-source-code)
 - Step 4: [Setup environment variables.](#setting-environment-variables-configuration)
+- Step 5: Manually trigger the timer function (TODO)
 ### Demo
 #### CallRecords
 - Step 1: [Join/Create] a [call/meeting] in teams.
@@ -76,14 +81,15 @@
 ![](./img/azPortal_ApiPermissions.png)
 
 ### Create Bolb storage and containers
-- we create a blob storage named `callrecordsaved`
+- we create a blob storage named `abnormalmeetingstorage`
 - then create three containers
-    - callrecord-save
-    - subscription-list
-    - userevents
-- add a blank json file named `subscriptionList.json` in container `subscription-list`
+    - callrecords-container
+    - subscription-container
+    - userevents-container
     ![](./img/azPortal_containers.png)
 
+
+<!-- TODO: create a function app when deploying using vs -->
 ### Create Function App
 - Go to Azure Portal
     - Go to "Function App" -> Create a function app named "AbnormalMeetings" 
@@ -99,6 +105,7 @@
     ![](./img/vsPublish_profilePublish.png)
 - **Well done!** The function app has been deployed in Azure.
 ### Setting Environment Variables (Configuration)
+TODO: change the edit method using my python tool
 <!--
 - The specified location will be 
     1. Deployed Azure: in the environment variable
@@ -145,22 +152,22 @@
   },
   {
     "name": "BlobConnectionString",
-    "value": "DefaultEndpointsProtocol=https;AccountName=callrecordsaved;AccountKey=41EWWoju5Iqj3F7JBLgvq4rLS29FoY8YxrRAqT0H7biLkUAzquDzKvOsSpMU7k6Bc+4xJyPxyoIS+AStZOjSsw==;EndpointSuffix=core.windows.net",
+    "value": "DefaultEndpointsProtocol=https;AccountName=abnormalmeetingstorage;AccountKey=41EWWoju5Iqj3F7JBLgvq4rLS29FoY8YxrRAqT0H7biLkUAzquDzKvOsSpMU7k6Bc+4xJyPxyoIS+AStZOjSsw==;EndpointSuffix=core.windows.net",
     "slotSetting": false
   },
   {
     "name": "BlobContainerName_CallRecords",
-    "value": "callrecord-save",
+    "value": "callrecords-container",
     "slotSetting": false
   },
   {
     "name": "BlobContainerName_SubscriptionList",
-    "value": "subscription-list",
+    "value": "subscription-container",
     "slotSetting": false
   },
   {
     "name": "BlobContainerName_UserEvents",
-    "value": "userevents",
+    "value": "userevents-container",
     "slotSetting": false
   },
   {
@@ -230,10 +237,10 @@
 - "BlobConnectionString",
 <!-- - "BlobContainerName_CallRecords",
 - "BlobContainerName_UserEvents",
-- "BlobContainerName_SubscriptionList": "subscription-list",
+- "BlobContainerName_SubscriptionList": "subscription-container",
 - "BlobFileName": "subscriptionList.json", -->
 ##### Explanation
-- `BlobConnectionString` is the blob connectionstring, where you want to store your data. In this case, it is the connection string of `callrecordsaved`
+- `BlobConnectionString` is the blob connectionstring, where you want to store your data. In this case, it is the connection string of `abnormalmeetingstorage`
 <!-- - `BlobContainerName_CallRecords`, `BlobContainerName_UserEvents` are the containers that are used to store results after calling graph api
 - `BlobContainerName_SubscriptionList` is the container that used to store the `BlobFileName`, which will be used in subscription. -->
 #### Azure Active Directory
