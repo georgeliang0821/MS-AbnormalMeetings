@@ -17,8 +17,9 @@ namespace CallRecordsSubscription
     public class RenewSubscription
     {
         [FunctionName("RenewSubscription")]
-        //public static async Task Run([TimerTrigger("*/15 * * * * *")]TimerInfo myTimer, ILogger log)
-        public static async Task Run([TimerTrigger("0 25 16 * * *")] TimerInfo myTimer, ILogger log)
+        public static async Task Run(
+            [TimerTrigger("0 25 16 * * *")] TimerInfo myTimer, 
+            ILogger log)
         {
             log.LogInformation($"RenewSubscription executed at: {DateTime.Now}");
 
@@ -52,7 +53,6 @@ namespace CallRecordsSubscription
 
         private static async Task CallMSGraphUsingGraphSDKAsync(AuthenticationConfig config, IConfidentialClientApplication app, string[] scopes, ILogger log)
         {
-            // SubscriptionList newSubscriptionList = new SubscriptionList();
             SubscriptionList subscriptionList;
             
             string webhook_CallRecords = Environment.GetEnvironmentVariable("Webhook_CallRecords");
@@ -63,34 +63,43 @@ namespace CallRecordsSubscription
             
             // Read file from blob
             BlobContainerClient containerClient = new BlobContainerClient(connectionString, containerName);
+            // use this code to create the container directly, if it does not exist.
+            containerClient.CreateIfNotExists();
+
             BlobClient blobClient = containerClient.GetBlobClient(filename);
 
-            log.LogInformation("Getting file in azure function");
+            log.LogInformation("Getting file in azure blob.");
             Dictionary<string, string> subscriptionDict = new Dictionary<string, string>();
-            if (await blobClient.ExistsAsync())
+            
+            // If the file does not exist in azure, create a dummy one
+            if (!await blobClient.ExistsAsync())
             {
-                var response = await blobClient.DownloadAsync();
-                var responseStream = response.Value.Content;
-                string responseString = await new StreamReader(responseStream).ReadToEndAsync();
+                log.LogInformation("The target file do not exist in the container!");
+                log.LogInformation("Creating a default json file for you!");
 
-                subscriptionList = JsonConvert.DeserializeObject<SubscriptionList>(responseString);
-                if (subscriptionList.value != null)
-                {
-                    foreach (var subscriptionInfo in subscriptionList.value)
-                    {
-                        subscriptionDict.Add(subscriptionInfo.UserId, subscriptionInfo.SubscriptionId);
-                        // log.LogInformation(subscriptionInfo.UserId + " : " + subscriptionDict[subscriptionInfo.UserId]);
-                    }
-                }
-                else
-                {
-                    subscriptionList.value = new List<SubscriptionInfo>();
-                }
+                //string jsonString = System.Text.Json.JsonSerializer.Serialize(subscriptionList);
+                string jsonString = "{\"value\":[]}";
+                await daemon_console.GlobalFunction.SaveToBlob(filename, jsonString, connectionString, containerName, log);
+                log.LogInformation("Successfully creating a default json file.");
+            }
+
+            // Read the file in azure blob
+            var response = await blobClient.DownloadAsync();
+            var responseStream = response.Value.Content;
+            string responseString = await new StreamReader(responseStream).ReadToEndAsync();
+
+            subscriptionList = JsonConvert.DeserializeObject<SubscriptionList>(responseString);
+            if (subscriptionList.value == null)
+            {
+                subscriptionList.value = new List<SubscriptionInfo>();
             }
             else
             {
-                log.LogInformation("The target file do not exist in the container!");
-                return;
+                foreach (var subscriptionInfo in subscriptionList.value)
+                {
+                    subscriptionDict.Add(subscriptionInfo.UserId, subscriptionInfo.SubscriptionId);
+                    // log.LogInformation(subscriptionInfo.UserId + " : " + subscriptionDict[subscriptionInfo.UserId]);
+                }
             }
 
 
@@ -103,6 +112,7 @@ namespace CallRecordsSubscription
                 GraphServiceClient graphServiceClient = daemon_console.GlobalFunction.GetAuthenticatedGraphClient(app, scopes);
 
                 // Print all subscription in the current tenant
+                log.LogInformation("Printing all subscription in the current tenant");
                 var first_sub = await graphServiceClient.Subscriptions.Request().GetAsync();
                 while (first_sub != null)
                 {
