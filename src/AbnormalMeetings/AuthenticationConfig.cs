@@ -159,6 +159,15 @@ namespace daemon_console
     /// </summary>
     public class AuthenticationConfig
     {
+        // "BlobContainerName_CallRecords": "callrecords-container",
+        // "BlobContainerName_UserEvents": "userevents-container",
+        // "BlobContainerName_SubscriptionList": "subscription-container",
+        // "BlobFileName": "subscriptionList.json",
+        public string BlobContainerName_CallRecords { get; set; } = "callrecords-container";
+        public string BlobContainerName_UserEvents { get; set; } = "userevents-container";
+        public string BlobContainerName_SubscriptionList { get; set; } = "subscription-container";
+        public string BlobFileName { get; set; } = "subscriptionList.json";
+
         /// <summary>
         /// instance of Azure AD, for example public Azure or a Sovereign cloud (Azure China, Germany, US government, etc ...)
         /// </summary>
