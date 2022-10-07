@@ -37,7 +37,7 @@ namespace AbnormalMeetings
         {
             mylog = log;
 
-            log.LogInformation("CallRecord_UserEvents is triggered.");
+            log.LogInformation("GetUserEvents is triggered.");
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             if (requestBody == "")

@@ -60,7 +60,10 @@ namespace CallRecordsSubscription
             string connectionString = Environment.GetEnvironmentVariable("BlobConnectionString");
             string containerName = Environment.GetEnvironmentVariable("BlobContainerName_SubscriptionList");
             string filename = Environment.GetEnvironmentVariable("BlobFileName");
-            
+
+            log.LogInformation("webhook_CallRecords: " + webhook_CallRecords);
+            log.LogInformation("webhook_UserEvents: " + webhook_UserEvents);
+
             // Read file from blob
             BlobContainerClient containerClient = new BlobContainerClient(connectionString, containerName);
             // use this code to create the container directly, if it does not exist.
