@@ -89,10 +89,9 @@ namespace daemon_console
         /// <returns></returns>
         public static async Task SaveToBlob(string file_name, string jsonString, string connectionString, string containerName, ILogger log)
         {
-            //string connectionString = Environment.GetEnvironmentVariable("BlobConnectionString");
-            //string containerName = Environment.GetEnvironmentVariable("BlobContainerName");
 
             BlobContainerClient container = new BlobContainerClient(connectionString, containerName);
+            container.CreateIfNotExists();
 
             var blob = container.GetBlobClient(file_name);
             using (MemoryStream mem = new MemoryStream())
