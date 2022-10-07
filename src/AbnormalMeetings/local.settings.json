@@ -4,8 +4,6 @@
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet",
     "AzureWebJobsSecretStorageType": "files",
-    "Instance": "https://login.microsoftonline.com/{0}",
-    "ApiUrl": "https://graph.microsoft.com/",
     "BlobContainerName_CallRecords": "callrecords-container",
     "BlobContainerName_UserEvents": "userevents-container",
     "BlobContainerName_SubscriptionList": "subscription-container",

@@ -73,8 +73,8 @@ namespace AbnormalMeetings
 
                 AuthenticationConfig config = new AuthenticationConfig();
 
-                config.Instance = Environment.GetEnvironmentVariable("Instance");
-                config.ApiUrl = Environment.GetEnvironmentVariable("ApiUrl");
+                // config.Instance = Environment.GetEnvironmentVariable("Instance");
+                // config.ApiUrl = Environment.GetEnvironmentVariable("ApiUrl");
                 config.Tenant = Environment.GetEnvironmentVariable("Tenant");
                 config.ClientId = Environment.GetEnvironmentVariable("ClientId");
                 config.ClientSecret = Environment.GetEnvironmentVariable("ClientSecret");

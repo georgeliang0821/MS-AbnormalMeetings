@@ -28,8 +28,8 @@ namespace CallRecordsSubscription
             {
                 AuthenticationConfig config = new AuthenticationConfig();
 
-                config.Instance = Environment.GetEnvironmentVariable("Instance");
-                config.ApiUrl = Environment.GetEnvironmentVariable("ApiUrl");
+                // config.Instance = Environment.GetEnvironmentVariable("Instance");
+                // config.ApiUrl = Environment.GetEnvironmentVariable("ApiUrl");
                 config.Tenant = Environment.GetEnvironmentVariable("Tenant");
                 config.ClientId = Environment.GetEnvironmentVariable("ClientId");
                 config.ClientSecret = Environment.GetEnvironmentVariable("ClientSecret");
@@ -56,7 +56,7 @@ namespace CallRecordsSubscription
             SubscriptionList subscriptionList;
             
             string webhook_CallRecords = Environment.GetEnvironmentVariable("Webhook_CallRecords");
-            string webhook_UserEvents = Environment.GetEnvironmentVariable("Webhook_UserEvents");
+            string webhook_UserEvents = Environment.GetEnvironmentVariable("Webhook_UserEvents");           
             string connectionString = Environment.GetEnvironmentVariable("BlobConnectionString");
             string containerName = Environment.GetEnvironmentVariable("BlobContainerName_SubscriptionList");
             string filename = Environment.GetEnvironmentVariable("BlobFileName");
