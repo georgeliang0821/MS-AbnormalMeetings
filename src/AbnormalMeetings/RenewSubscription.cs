@@ -56,7 +56,7 @@ namespace CallRecordsSubscription
             SubscriptionList subscriptionList;
             
             string connectionString = Environment.GetEnvironmentVariable("BlobConnectionString");
-            string functionAppName = Environment.GetEnvironmentVariable("FunctionAppName");
+            string functionAppName = Environment.GetEnvironmentVariable("FunctionAppName").ToLower();
             string functionDefaultKey = Environment.GetEnvironmentVariable("FunctionDefaultKey");            
             
             // string containerName = Environment.GetEnvironmentVariable("BlobContainerName_SubscriptionList");
