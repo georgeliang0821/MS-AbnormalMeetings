@@ -19,18 +19,19 @@ namespace daemon_console
 {
     public class GlobalFunction
     {
-        public static async Task SaveObjectToBlob(string filename, object jsonObject, string connectionString_name, string containerName_name, ILogger log)
-        {
-            string connectionString = Environment.GetEnvironmentVariable("BlobConnectionString");
-            string containerName = Environment.GetEnvironmentVariable("BlobContainerName_CallRecords");
+        // 0 reference
+        // public static async Task SaveObjectToBlob(string filename, object jsonObject, string connectionString_name, string containerName_name, ILogger log)
+        // {
+        //     string connectionString = Environment.GetEnvironmentVariable("BlobConnectionString");
+        //     string containerName = Environment.GetEnvironmentVariable("BlobContainerName_CallRecords");
 
-            string jsonString = System.Text.Json.JsonSerializer.Serialize(jsonObject);
-            log.LogInformation("jsonString: " + jsonString);
+        //     string jsonString = System.Text.Json.JsonSerializer.Serialize(jsonObject);
+        //     log.LogInformation("jsonString: " + jsonString);
 
-            log.LogInformation("Writing file...");
-            await daemon_console.GlobalFunction.SaveToBlob(filename, jsonString, connectionString, containerName, log);
-            log.LogInformation("Success writing file: " + filename);
-        }
+        //     log.LogInformation("Writing file...");
+        //     await daemon_console.GlobalFunction.SaveToBlob(filename, jsonString, connectionString, containerName, log);
+        //     log.LogInformation("Success writing file: " + filename);
+        // }
 
         /// <summary>
         /// An example of how to authenticate the Microsoft Graph SDK using the MSAL library

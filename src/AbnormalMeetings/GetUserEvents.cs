@@ -90,9 +90,8 @@ namespace AbnormalMeetings
                 log.LogInformation("Running Function: SaveUserEvents");
                 string userEvent_Json = await SaveUserEvents(app, scopes, webApiUrl, log);
 
-                // await daemon_console.GlobalFunction.SaveObjectToBlob(filename, userEvent, "BlobConnectionString", "BlobContainerName_CallRecords", log);
                 string connectionString = Environment.GetEnvironmentVariable("BlobConnectionString");
-                string containerName = Environment.GetEnvironmentVariable("BlobContainerName_UserEvents"); ;
+                string containerName = config.BlobContainerName_UserEvents;
                 await daemon_console.GlobalFunction.SaveToBlob(filename, userEvent_Json, connectionString, containerName, log);
 
                 return new OkObjectResult(JsonConvert.SerializeObject("Successfully run!"));

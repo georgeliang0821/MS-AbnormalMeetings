@@ -80,10 +80,11 @@ namespace AbnormalMeetings
                 log.LogInformation("jsonString: " + jsonString);
 
                 string connectionString = Environment.GetEnvironmentVariable("BlobConnectionString");
-                string containerName = Environment.GetEnvironmentVariable("BlobContainerName_CallRecords");
+                string containerName = config.BlobContainerName_CallRecords;
+                // string containerName = Environment.GetEnvironmentVariable("BlobContainerName_CallRecords");
 
                 log.LogInformation("Writing file...");
-                await daemon_console.GlobalFunction.SaveToBlob(filename, jsonString, connectionString,containerName, log);
+                await daemon_console.GlobalFunction.SaveToBlob(filename, jsonString, connectionString, containerName, log);
                 log.LogInformation("Success writing file: " + meetingID + ".json");
                 
                 //// Call MS Graph REST API directly
