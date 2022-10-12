@@ -5,13 +5,13 @@
     "FUNCTIONS_WORKER_RUNTIME": "dotnet",
     "AzureWebJobsSecretStorageType": "files",
 
-    "BlobConnectionString": "DefaultEndpointsProtocol=https;AccountName=abnormalmeetings20221008;AccountKey=VH7N9jFQsjxHiDT/IYRgnXwUuROURFWOKkZ4Zfa0RNTvaYk7W1g6OY82GqRRPa04lsDS/86GtNCM+AStzp+9xg==;EndpointSuffix=core.windows.net",
+    "BlobConnectionString": "",
 
-    "Tenant": "29446b9f-c0bb-43ca-970d-a59877af3479",
-    "ClientId": "e5098aa7-a68c-4c86-9175-6b959ad3b120",
-    "ClientSecret": "E_H8Q~c2KEsvK6BTsJfgGPS6Qf4L5fHAeIp3tcUf",
+    "Tenant": "",
+    "ClientId": "",
+    "ClientSecret": "",
 
-    "FunctionAppName": "abnormalmeetings20221008005227",
-    "FunctionDefaultKey": "fAy2y5XsHK1E3Q0pwsjMacB0kBWiLl_H-nkGlIAPrHZ5AzFuqQN2hQ=="
+    "FunctionAppName": "",
+    "FunctionDefaultKey": ""
   }
 }
