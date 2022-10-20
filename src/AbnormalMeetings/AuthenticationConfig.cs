@@ -14,24 +14,34 @@ using System.Net.Http.Headers;
 using Azure.Storage.Blobs;
 using System.Text;
 using Directory = System.IO.Directory;
+using Azure.Core;
+using Azure;
+using Microsoft.AspNetCore.Hosting.Server;
+using System.Collections.Specialized;
+using Microsoft.AspNetCore.Http;
+using System.Linq;
 
 namespace daemon_console
 {
     public class GlobalFunction
     {
-        // 0 reference
-        // public static async Task SaveObjectToBlob(string filename, object jsonObject, string connectionString_name, string containerName_name, ILogger log)
-        // {
-        //     string connectionString = Environment.GetEnvironmentVariable("BlobConnectionString");
-        //     string containerName = Environment.GetEnvironmentVariable("BlobContainerName_CallRecords");
+        public static void PrintHeaders(IHeaderDictionary req_Headers, ILogger log)
+        {
+            // log.LogInformation(req_Headers.Values.ToString());
+            // req_Headers.Keys
+            string str_headers = "The Headers are: \n";
 
-        //     string jsonString = System.Text.Json.JsonSerializer.Serialize(jsonObject);
-        //     log.LogInformation("jsonString: " + jsonString);
+            var zipItems = req_Headers.Keys.Zip(
+                req_Headers.Values, (first, second) 
+                    => "Key:" + first + "\tValue:" + second + "\n");
 
-        //     log.LogInformation("Writing file...");
-        //     await daemon_console.GlobalFunction.SaveToBlob(filename, jsonString, connectionString, containerName, log);
-        //     log.LogInformation("Success writing file: " + filename);
-        // }
+            foreach (var item in zipItems)
+                str_headers += item;
+            //Console.WriteLine(item);
+
+            log.LogInformation(str_headers);
+        }
+
 
         /// <summary>
         /// An example of how to authenticate the Microsoft Graph SDK using the MSAL library

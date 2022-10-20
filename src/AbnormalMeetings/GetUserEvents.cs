@@ -39,6 +39,8 @@ namespace AbnormalMeetings
 
             log.LogInformation("GetUserEvents is triggered.");
 
+            daemon_console.GlobalFunction.PrintHeaders(req.Headers, log);
+
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             if (requestBody == "")
             {
