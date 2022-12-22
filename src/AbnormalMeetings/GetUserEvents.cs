@@ -1,27 +1,14 @@
 using System;
 using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Text.Json.Nodes;
 using System.Threading.Tasks;
-using System.Web;
-using Azure.Core;
-using Azure.Storage.Blobs;
 using daemon_console;
 using global_class;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Logging;
-using Microsoft.Graph;
-using Microsoft.Graph.CallRecords;
 using Microsoft.Identity.Client;
-using Microsoft.Identity.Web;
-using Microsoft.VisualBasic;
 using Newtonsoft.Json;
 
 namespace AbnormalMeetings
@@ -90,7 +77,7 @@ namespace AbnormalMeetings
 
                 // Call MS graph using the Graph SDK
                 log.LogInformation("Running Function: SaveUserEvents");
-                string userEvent_Json = await SaveUserEvents(app, scopes, webApiUrl, log);
+                string userEvent_Json = await daemon_console.GlobalFunction.GetHttpRequest(app, scopes, webApiUrl, log);
 
                 string connectionString = Environment.GetEnvironmentVariable("BlobConnectionString");
                 string containerName = config.BlobContainerName_UserEvents;
@@ -105,64 +92,6 @@ namespace AbnormalMeetings
             }
 
             return new BadRequestObjectResult("Something wrong happened! Please check your log!");
-        }
-
-
-
-
-        /// <summary>
-        /// The following example shows how to initialize the MS Graph SDK
-        /// </summary>
-        /// <param name="app"></param>
-        /// <param name="scopes"></param>
-        /// <returns></returns>
-        private static async Task<string> SaveUserEvents(IConfidentialClientApplication app, string[] scopes, string webApiUrl, ILogger log)
-        {
-            AuthenticationResult result = null;
-            try
-            {
-                result = await app.AcquireTokenForClient(scopes)
-                    .ExecuteAsync();
-                log.LogInformation("Token acquired");
-            }
-            catch (MsalServiceException ex) when (ex.Message.Contains("AADSTS70011"))
-            {
-                log.LogInformation("Scope provided is not supported");
-            }
-
-            if (result != null)
-            {
-                string accessToken = result.AccessToken;
-                var httpClient = new HttpClient();
-
-                HttpRequestHeaders defaultRequestHeaders1 = httpClient.DefaultRequestHeaders;
-                var defaultRequestHeaders = defaultRequestHeaders1;
-                if (defaultRequestHeaders.Accept == null || !defaultRequestHeaders.Accept.Any(m => m.MediaType == "application/json"))
-                {
-                    httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                }
-                defaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-
-                HttpResponseMessage response = await httpClient.GetAsync(webApiUrl);
-                if (response.IsSuccessStatusCode)
-                {
-                    string json = await response.Content.ReadAsStringAsync();
-                    return json;
-                }
-                else
-                {
-                    log.LogInformation($"Failed to call the web API: {response.StatusCode}");
-                    string content = await response.Content.ReadAsStringAsync();
-
-                    // Note that if you got reponse.Code == 403 and reponse.content.code == "Authorization_RequestDenied"
-                    // this is because the tenant admin as not granted consent for the application to call the Web API
-                    log.LogInformation($"Content: {content}");
-                }
-
-                return null;
-            }
-
-            return null;
         }
     }
 }

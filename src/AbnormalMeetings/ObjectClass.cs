@@ -3,6 +3,8 @@ using System.Collections.Generic;
 
 namespace global_class
 {
+    // I use https://json2csharp.com to transform json file to C# class
+
     /// <summary>
     /// Return json from subscription
     /// </summary>

@@ -14,17 +14,19 @@ using System.Net.Http.Headers;
 using Azure.Storage.Blobs;
 using System.Text;
 using Directory = System.IO.Directory;
-using Azure.Core;
-using Azure;
-using Microsoft.AspNetCore.Hosting.Server;
-using System.Collections.Specialized;
 using Microsoft.AspNetCore.Http;
 using System.Linq;
+using System.Net.Http;
 
 namespace daemon_console
 {
     public class GlobalFunction
     {
+        /// <summary>
+        /// Print headers of the http request to log
+        /// </summary>
+        /// <param name="req_Headers"></param>
+        /// <param name="log"></param>
         public static void PrintHeaders(IHeaderDictionary req_Headers, ILogger log)
         {
             // log.LogInformation(req_Headers.Values.ToString());
@@ -42,6 +44,60 @@ namespace daemon_console
             log.LogInformation(str_headers);
         }
 
+        /// <summary>
+        /// The following example shows how to initialize the MS Graph SDK
+        /// </summary>
+        /// <param name="app"></param>
+        /// <param name="scopes"></param>
+        /// <returns></returns>
+        public static async Task<string> GetHttpRequest(IConfidentialClientApplication app, string[] scopes, string webApiUrl, ILogger log)
+        {
+            AuthenticationResult result = null;
+            try
+            {
+                result = await app.AcquireTokenForClient(scopes)
+                    .ExecuteAsync();
+                log.LogInformation("Token acquired");
+            }
+            catch (MsalServiceException ex) when (ex.Message.Contains("AADSTS70011"))
+            {
+                log.LogInformation("Scope provided is not supported");
+            }
+
+            if (result != null)
+            {
+                string accessToken = result.AccessToken;
+                var httpClient = new HttpClient();
+
+                HttpRequestHeaders defaultRequestHeaders1 = httpClient.DefaultRequestHeaders;
+                var defaultRequestHeaders = defaultRequestHeaders1;
+                if (defaultRequestHeaders.Accept == null || !defaultRequestHeaders.Accept.Any(m => m.MediaType == "application/json"))
+                {
+                    httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                }
+                defaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+                HttpResponseMessage response = await httpClient.GetAsync(webApiUrl);
+                if (response.IsSuccessStatusCode)
+                {
+                    string json = await response.Content.ReadAsStringAsync();
+                    return json;
+                }
+                else
+                {
+                    log.LogInformation($"Failed to call the web API: {response.StatusCode}");
+                    string content = await response.Content.ReadAsStringAsync();
+
+                    // Note that if you got reponse.Code == 403 and reponse.content.code == "Authorization_RequestDenied"
+                    // this is because the tenant admin as not granted consent for the application to call the Web API
+                    log.LogInformation($"Content: {content}");
+                }
+
+                return null;
+            }
+
+            return null;
+        }
 
         /// <summary>
         /// An example of how to authenticate the Microsoft Graph SDK using the MSAL library
@@ -174,10 +230,11 @@ namespace daemon_console
         // "BlobContainerName_UserEvents": "userevents-container",
         // "BlobContainerName_SubscriptionList": "subscription-container",
         // "BlobFileName": "subscriptionList.json",
-        public string BlobContainerName_CallRecords { get; set; } = "callrecords-container";
-        public string BlobContainerName_UserEvents { get; set; } = "userevents-container";
-        public string BlobContainerName_SubscriptionList { get; set; } = "subscription-container";
-        public string BlobFileName { get; set; } = "subscriptionList.json";
+        public string BlobContainerName_ChatMessages { get; } = "chatmessages-container";
+        public string BlobContainerName_CallRecords { get; } = "callrecords-container";
+        public string BlobContainerName_UserEvents { get; } = "userevents-container";
+        public string BlobContainerName_SubscriptionList { get; } = "subscription-container";
+        public string BlobFileName { get; } = "subscriptionList.json";
 
         /// <summary>
         /// instance of Azure AD, for example public Azure or a Sovereign cloud (Azure China, Germany, US government, etc ...)

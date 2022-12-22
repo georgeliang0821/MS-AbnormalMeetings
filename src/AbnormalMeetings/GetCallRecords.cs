@@ -7,6 +7,7 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System.Text.RegularExpressions;
 
 using Microsoft.Graph;
 using Microsoft.Graph.CallRecords;
@@ -26,9 +27,11 @@ namespace AbnormalMeetings
         {
             log.LogInformation("GetCallRecords_Http is triggered.");
 
-            daemon_console.GlobalFunction.PrintHeaders(req.Headers, log);
+            daemon_console.GlobalFunction.PrintHeaders(req.Headers, log); // print headers
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            
+            // print body (can move to daemon_console.GlobalFunction)
             if (requestBody == "")
             {
                 log.LogInformation("The requestBody is NULL");
@@ -39,7 +42,7 @@ namespace AbnormalMeetings
             }
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //////////////////// This is a validation process, so rutrun and stop program here! ////////////////////
+            //////////////////// This is a validation process, so return and stop program here! ////////////////////
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
             string query_validationToken = req.Query["validationToken"];
             if (query_validationToken != null)
@@ -77,9 +80,66 @@ namespace AbnormalMeetings
                 log.LogInformation("Running Function: GetCallRecordsSDK");
                 CallRecord callrecord = await GetCallRecordsSDK(app, scopes, meetingID, log);
 
+                // Get the chat here
+                try
+                {
+                    // Check if going to call ChatMessage Apis
+                    if (Environment.GetEnvironmentVariable("IsChatApi") == "true")
+                    {
+                        log.LogInformation("Trying to get chat messages.");
+                        log.LogInformation("callrecord.JoinWebUrl: " + callrecord.JoinWebUrl);
+
+                        // Define a regular expression for repeated words.
+                        Regex rx = new Regex(@"19%3ameeting.*thread\.v2", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+                        string text = callrecord.JoinWebUrl;
+
+                        // Find matches.
+                        MatchCollection matches = rx.Matches(text);
+
+                        // If no matches, it maybe a direct 1-on-1 call from the peer
+                        if (matches.Count > 0)
+                        {
+
+                            // Report on each match.
+                            string chatid = matches[0].Value;
+                            string resource = $"chats/{chatid}/messages";
+                            string webApiUrl = $"{config.ApiUrl}v1.0/{resource}";
+
+                            log.LogInformation("Successfully get the chat ID: " + chatid);
+                            
+                            app = daemon_console.GlobalFunction.GetAppAsync(config);
+                            log.LogInformation("Success login.");
+
+                            // Call MS graph using the Graph SDK
+                            log.LogInformation("Running Function: GetHttpRequest");
+                            string returnJson = await daemon_console.GlobalFunction.GetHttpRequest(app, scopes, webApiUrl, log);
+
+                            log.LogInformation("ChatMessage jsonString: " + returnJson);
+
+                            await daemon_console.GlobalFunction.SaveToBlob(
+                                chatid,
+                                returnJson,
+                                Environment.GetEnvironmentVariable("BlobConnectionString"),
+                                config.BlobContainerName_ChatMessages,
+                                log);
+
+                            log.LogInformation("Success writing file: " + chatid + ".json");
+                        }
+                        else
+                        {
+                            log.LogInformation("No match of chatID in JoinWebUrl.");
+                        } 
+                    }
+                }
+                catch
+                {
+                    log.LogInformation("Failed to get ChatMessages in function. Continue to get CallRecords.");
+                }
+
                 string filename = callrecord.Id + ".json";
                 string jsonString = System.Text.Json.JsonSerializer.Serialize(callrecord);
-                log.LogInformation("jsonString: " + jsonString);
+                log.LogInformation("Callrecord jsonString: " + jsonString);
 
                 string connectionString = Environment.GetEnvironmentVariable("BlobConnectionString");
                 string containerName = config.BlobContainerName_CallRecords;
@@ -131,9 +191,6 @@ namespace AbnormalMeetings
             }
             return null;
         }
-
-
-
     }
 }
 
