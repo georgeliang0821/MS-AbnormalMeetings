@@ -164,19 +164,36 @@
     ![azPortal_functionApp_configuration](./img/azPortal_functionApp_configuration.png)
 
 #### Variables Needed Modified
+- local.setting.json
+    ```json
+    {
+        "IsEncrypted": false,
+        "Values": {
+            "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+            "FUNCTIONS_WORKER_RUNTIME": "dotnet",
+            "AzureWebJobsSecretStorageType": "files",
+            "IsChatApi": "true",
+
+            "BlobConnectionString": "",
+
+            "Tenant": "",
+            "ClientId": "",
+            "ClientSecret": "",
+
+            "FunctionAppName": "",
+            "FunctionDefaultKey": ""
+        }
+    }
+    ```
+#### Using Chat Api
+- "IsChatApi"
+    - This is a feature flag that is used to decide whether the application can get the chatMessage
+
 #### Blob storage related
-- "BlobConnectionString",
-<!-- - "BlobContainerName_CallRecords",
-- "BlobContainerName_UserEvents",
-- "BlobContainerName_SubscriptionList": "subscription-container",
-- "BlobFileName": "subscriptionList.json", -->
-##### Explanation
-- `BlobConnectionString` is the blob connectionstring, where you want to store your data. In this case, it is the connection string of `abnormalmeetingstorage`
-<!-- - `BlobContainerName_CallRecords`, `BlobContainerName_UserEvents` are the containers that are used to store results after calling graph api
-- `BlobContainerName_SubscriptionList` is the container that used to store the `BlobFileName`, which will be used in subscription. -->
+- "BlobConnectionString"
+    - `BlobConnectionString` is the blob connectionstring, where you want to store your data. In this case, it is the connection string of `abnormalmeetingstorage`
+
 #### Azure Active Directory
-<!-- - "Instance": "https://login.microsoftonline.com/{0}",
-- "ApiUrl": "https://graph.microsoft.com/", -->
 - "Tenant",
 - "ClientId",
 - "ClientSecret",
@@ -185,20 +202,12 @@
 - Go to "Azure Active Dirrectory" -> "App Registrations" -> "Overview" and record several infornmation
     - `Tenant`: Specified in "Directory (tenant) ID"
     - `ClientId`: Specified in "Application (client) ID"
+
 #### Function URLs (for webhook)
 - "FunctionAppName"
     - The name of your azure function app (endpoint)
 - "FunctionDefaultKey"
     - The master key of azure function app
-<!-- - "Webhook_CallRecords",
-- "Webhook_UserEvents"
-##### How to get `Webhook_CallRecords`, `Webhook_UserEvents`
-- After you deployed the function app to Azure, go to "AbnormalMeetings" -> "Funtions" -> "GetCallRecords" or "GetUserEvents" -> "get function url" to get the webhook urls
-  ![azPortal_getWebhook](./img/azPortal_getWebhook.png) -->
-
-<!-- ## Usage
-- After deployment and setting configuration, the function will start working!
-- You can go to "Monitor" in functions to monitor the logs of azure functions -->
 
 ## Features 
 > Here we describe what each .cs file does.
