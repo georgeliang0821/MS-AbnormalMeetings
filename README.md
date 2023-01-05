@@ -13,6 +13,7 @@
 * [Project Status](#project-status)
 * [Room for Improvement](#room-for-improvement)
 * [Acknowledgements](#acknowledgements)
+* [File/Folder Architecture](#file--folder-architecture)
 * [Contact](#contact)
 <!-- * [Screenshots](#screenshots) -->
 <!-- * [Usage](#usage) -->
@@ -25,7 +26,8 @@
         - [Subscription - change notifications](https://learn.microsoft.com/en-us/graph/api/resources/webhooks?view=graph-rest-1.0&preserve-view=true)
         - [Get event](https://learn.microsoft.com/en-us/graph/api/event-get?view=graph-rest-1.0&tabs=http)
         - [Get callRecord](https://learn.microsoft.com/en-us/graph/api/callrecords-callrecord-get?view=graph-rest-1.0&tabs=http)
-    - 1 * Blob storage
+        - [Get chatMessage](https://learn.microsoft.com/en-us/graph/api/chat-list-messages?view=graph-rest-1.0&tabs=http#request-2)
+    - 1 * Blob storage (auto-created by the program)
     - ADX
 - Work Flow
     - ![](./img/new_architecture.png)
@@ -234,6 +236,14 @@
                     .Expand("sessions($expand=segments)")
                     .GetAsync();
     ```
+- If the environment variable `IsChatApi` is `true`, we are going to get the chatMessage from chatMessage API
+    ```C#
+    // Get the chat id from regex
+    string chatid = matches[0].Value; 
+    string resource = $"chats/{chatid}/messages";
+    string webApiUrl = $"{config.ApiUrl}v1.0/{resource}"; // combine the resource to endpoint api
+    HttpResponseMessage response = await httpClient.GetAsync(webApiUrl);
+    ```
 ### GetUserEvents.cs
 - When the program recieve http request from the subscription resource, the program will be triggered.
 - Use the `resource` to get the event object and save it as a json file to container specified in `BlobContainerName_UserEvents`, using Http request.
@@ -274,6 +284,12 @@ Give credit here.
 - This project was based on [this tutorial](https://www.example.com).
 - Many thanks to...
 -->
+
+## File / Folder Architecture
+### Folder
+- AssistTools: Can use this to generate configuration to fill in azure
+- img: all image files for README.md
+- src: source code of project
 
 ## Contact
 Created by [@Eric](https://github.com/yhlu0923/) - feel free to contact me!
