@@ -158,7 +158,6 @@ namespace daemon_console
                 mem.Position = 0;
 
                 // Upload the file to the server
-                _ = await blob.UploadAsync(mem, overwrite: true);
                 await blob.UploadAsync(mem, overwrite: true);
             }
 
